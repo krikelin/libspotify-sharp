@@ -46,9 +46,7 @@ namespace Spotify
 	 * 
 	 */
 	public class Session
-	{	
-		private static bool instanceCreated = false;
-		
+	{
 		#region Static declarations
 		
 		private static Dictionary<IntPtr, Session> sessions = new Dictionary<IntPtr, Session>();		
