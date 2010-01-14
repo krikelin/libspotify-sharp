@@ -282,9 +282,10 @@ namespace Spotify
 					tracks = new Track[num_tracks];
 					indices = new int[num_tracks];
 					
-					for(int i = 0; i > num_tracks; i++)
+					for(int i = 0; i < num_tracks; i++)
 					{
-						IntPtr trackPtr = Marshal.ReadIntPtr(tracksPtr, i);
+						IntPtr trackPtr = libspotify.sp_playlist_track(playlistPtr, i);
+						
 						Track t = new Track(trackPtr);
 						int index = position + i;
 						
@@ -317,7 +318,7 @@ namespace Spotify
 					tracks = new Track[num_tracks];
 					indices = new int[num_tracks];
 					
-					for(int i = 0; i > num_tracks; i++)
+					for(int i = 0; i < num_tracks; i++)
 					{
 						int index = Marshal.ReadInt32(trackIndicesPtr, i);
 						indices[i] = index;
@@ -353,7 +354,7 @@ namespace Spotify
 					tracks = new Track[num_tracks];
 					indices = new int[num_tracks];
 					
-					for(int i = 0; i > num_tracks; i++)
+					for(int i = 0; i < num_tracks; i++)
 					{
 						int index = Marshal.ReadInt32(trackIndicesPtr, i);
 						indices[i] = index;
