@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec mono "libspotify-sharp-demo/bin/Debug/demo.exe" "$@"
