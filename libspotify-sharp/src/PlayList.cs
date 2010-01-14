@@ -524,8 +524,9 @@ namespace Spotify
 		
 		public override string ToString()
 		{
+			string linkString = LinkString;
 			return string.Format("[Playlist: TrackCount={0}, Name={1}, IsLoaded={2}, HasPendingChanges={3}, IsCollaborative={4}, Owner={5}, LinkString={6}]",
-				TrackCount, Name, IsLoaded, HasPendingChanges, IsCollaborative, Owner, LinkString);
+				TrackCount, Name, IsLoaded, HasPendingChanges, IsCollaborative, Owner, linkString == null ? "null" : linkString);
 		}
 
 		
