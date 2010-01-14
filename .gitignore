@@ -1,3 +1,5 @@
 *.pidb
 libspotify-sharp-demo/bin/
+libspotify-sharp-demo/obj/
 libspotify-sharp/bin/
+libspotify-sharp/obj/
