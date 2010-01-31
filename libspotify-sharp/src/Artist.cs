@@ -123,7 +123,8 @@ namespace Spotify
 				string linkString = string.Empty;
 				using(Link l = CreateLink())
 				{
-					linkString = l.ToString();	
+					if( l != null)
+						linkString = l.ToString();						
 				}
 				
 				return linkString;

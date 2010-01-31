@@ -34,7 +34,7 @@ namespace Spotify
 		
 		#region Constants
 	
-		public const int SPOTIFY_API_VERSION = 2;
+		public const int SPOTIFY_API_VERSION = 3;
 	
 		#endregion
 		
@@ -235,6 +235,7 @@ namespace Spotify
 			internal IntPtr playlist_added;
 			internal IntPtr playlist_removed;
 			internal IntPtr playlist_moved;
+			internal IntPtr container_loaded;
 		}
 	
 		#endregion		
@@ -361,6 +362,9 @@ namespace Spotify
 		internal static extern IntPtr sp_link_as_track(IntPtr linkPtr);
 		
 		[DllImport ("libspotify")]
+		internal static extern IntPtr sp_link_as_track_and_offset(IntPtr linkPtr, out IntPtr offsetPtr);
+		
+		[DllImport ("libspotify")]
 		internal static extern IntPtr sp_link_as_album(IntPtr linkPtr);
 		
 		[DllImport ("libspotify")]
@@ -441,6 +445,12 @@ namespace Spotify
 		internal static extern IntPtr sp_artistbrowse_track(IntPtr artistBrowsePtr, int index);
 		
 		[DllImport ("libspotify")]
+		internal static extern int sp_artistbrowse_num_albums(IntPtr artistBrowsePtr);
+		
+		[DllImport ("libspotify")]
+		internal static extern IntPtr sp_artistbrowse_album(IntPtr artistBrowsePtr, int index);
+		
+		[DllImport ("libspotify")]
 		internal static extern int sp_artistbrowse_num_similar_artists(IntPtr artistBrowsePtr);
 		
 		[DllImport ("libspotify")]
@@ -453,7 +463,8 @@ namespace Spotify
 		internal static extern void sp_artistbrowse_add_ref(IntPtr artistBrowsePtr);
 		
 		[DllImport ("libspotify")]
-		internal static extern void sp_artistbrowse_release(IntPtr artistBrowsePtr);
+		internal static extern void sp_artistbrowse_release(IntPtr artistBrowsePtr);		
+		
 		
 		#endregion
 		
@@ -523,19 +534,10 @@ namespace Spotify
 		internal static extern sp_error sp_image_error(IntPtr imagePtr);
 		
 		[DllImport("libspotify")]
-		internal static extern int sp_image_width(IntPtr imagePtr);
-		
-		[DllImport("libspotify")]
-		internal static extern int sp_image_height(IntPtr imagePtr);
-		
-		[DllImport("libspotify")]
 		internal static extern sp_imageformat sp_image_format(IntPtr imagePtr);
 		
-		[DllImport("libspotify")]
-		internal static extern IntPtr sp_image_lock_pixels(IntPtr imagePtr, out int pitch);
-		
-		[DllImport("libspotify")]
-		internal static extern void sp_image_unlock_pixels(IntPtr imagePtr);
+		[DllImport("libspotify")]		
+		internal static extern IntPtr sp_image_data(IntPtr imagePtr, out IntPtr sizePtr);
 		
 		[DllImport("libspotify")]		
 		internal static extern IntPtr sp_image_image_id(IntPtr imagePtr);
@@ -608,7 +610,7 @@ namespace Spotify
 		USER_BANNED = 7,
 		UNABLE_TO_CONTACT_SERVER = 8,
 		CLIENT_TOO_OLD = 9,
-		OTHER_PERMAMENT = 10,
+		OTHER_PERMANENT = 10,
 		BAD_USER_AGENT = 11,
 		MISSING_CALLBACK = 12,
 		INVALID_INDATA = 13,
@@ -643,13 +645,8 @@ namespace Spotify
 	
 	internal enum sp_imageformat : int
 	{
-		UNKNOWN = -1,
-		RGB,		// 24 bit image in RGB form
-		BGR,		// 24 bit image in BGR form
-		RGBA,		// 32 bit image in RGBA form
-		RGBA_PRE,	// 32 bit image in RGBA form with premultiplied alpha channel
-		BGRA,		// 32 bit image in BGRA form
-		BGRA_PRE	// 32 bit image in BGRA form with premultiplied alpha channel 
+		SP_IMAGE_FORMAT_UNKNOWN,
+		SP_IMAGE_FORMAT_JPEG
 	}
 	
 	public enum sp_albumtype

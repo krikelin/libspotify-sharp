@@ -59,6 +59,28 @@ namespace Spotify
 			return result;
 		}
 		
+		public static Track CreateFromLink(Link link, out int offset)
+		{
+			Track result = null;
+			offset = 0;
+			
+			if(link.linkPtr != IntPtr.Zero)
+			{
+				IntPtr offsetPtr = IntPtr.Zero;
+				
+				lock(libspotify.Mutex)
+				{
+					IntPtr trackPtr = libspotify.sp_link_as_track_and_offset(link.linkPtr, out offsetPtr);
+					if(trackPtr != IntPtr.Zero)
+						result = new Track(trackPtr);
+				}
+				
+				offset = offsetPtr.ToInt32();
+			}
+			
+			return result;
+		}
+		
 		#endregion
 		
 		#region Declarations

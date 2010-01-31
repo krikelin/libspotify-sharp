@@ -38,6 +38,7 @@ namespace Spotify
 		private Artist artist;		
 		private List<string> portraitIds;
 		private Track[] tracks;
+		private Album[] albums;
 		private Artist[] similarArtists;
 		private string biography;		
 		
@@ -71,6 +72,13 @@ namespace Spotify
 				{
 					IntPtr trackPtr = libspotify.sp_artistbrowse_track(artistBrowsePtr, i);
 					tracks[i] = new Track(trackPtr);
+				}
+				
+				albums = new Album[libspotify.sp_artistbrowse_num_albums(artistBrowsePtr)];
+				for(int i = 0; i < albums.Length; i++)
+				{
+					IntPtr albumPtr = libspotify.sp_artistbrowse_album(artistBrowsePtr, i);
+					albums[i] = new Album(albumPtr);
 				}
 				
 				similarArtists = new Artist[libspotify.sp_artistbrowse_num_similar_artists(artistBrowsePtr)];

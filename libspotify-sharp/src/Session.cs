@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -102,6 +103,7 @@ namespace Spotify
         public event SearchEventHandler OnSearchComplete;
 		public event ImageEventHandler OnImageLoaded;
 		public event SessionEventHandler OnEndOfTrack;
+		public event SessionEventHandler OnPlaylistContainerLoaded;
 		
 		/* NOTE
 		 * 
@@ -625,7 +627,7 @@ namespace Spotify
 		
 		private void ImageLoadedCallback(IntPtr imagePtr, IntPtr userDataPtr)
         {
-			IntPtr pixelPtr = IntPtr.Zero;			
+			
 			int id = userDataPtr.ToInt32();
 			object state = states.ContainsKey(id) ? states[id] : null;
 			ManualResetEvent wh = null;
@@ -638,116 +640,27 @@ namespace Spotify
 			}
 			
 			try
-			{
+			{	
 				// No locking needed since this is called on our own thread
 				// that already holds the lock.
 				
-				int width = libspotify.sp_image_width(imagePtr);
-				int height = libspotify.sp_image_height(imagePtr);				
-				sp_imageformat spotifyFormat = libspotify.sp_image_format(imagePtr);
-				
-				int stride;
-				pixelPtr = libspotify.sp_image_lock_pixels(imagePtr, out stride);
-				
 				/*
-				 * libspotify is _REALLY_ stupidly written regarding image format
-				 * The simplest would be to give a pointer to a PNG or JPG image
-				 * and leave processing to the using app, but no. The devs decided
-				 * to decode image internally to a pixelformat that might be really
-				 * inconvenient to the user. Do it again and do it right next time
-				 * Spotify!
+				 * libspotify was _REALLY_ stupidly written regarding image format.
+				 * 
+				 * The first versions gave you pointers to decoded image data instead
+				 * of raw image data. libspotify devs seems to have listened to 
+				 * the complaints about this. Yay for them.
 				 */
 				
-				// I'm not 100% familiar with Monos Cairo Drawing implementation.
-				// On Windows, RGB is stored as BGR by GDI+ for example.
-				// I'm doing this the lazy inefficient way for now.
+				IntPtr lengthPtr = IntPtr.Zero;				
+				IntPtr dataPtr = libspotify.sp_image_data(imagePtr, out lengthPtr);
 				
-				PixelFormat format = PixelFormat.Undefined;				
-				bool rgb;
-				int alphaMode;
-				switch (spotifyFormat)
-				{
-					case sp_imageformat.BGR:
-						rgb = false;
-						alphaMode = 0;
-						format = PixelFormat.Format24bppRgb;
-						break;
-					case sp_imageformat.BGRA:
-						rgb = false;
-						alphaMode = 1;
-						format = PixelFormat.Format32bppArgb;
-						break;
-					case sp_imageformat.BGRA_PRE:
-						rgb = false;
-						alphaMode = 2;
-						format = PixelFormat.Format32bppPArgb;
-						break;
-					case sp_imageformat.RGB:
-						rgb = true;
-						alphaMode = 0;
-						format = PixelFormat.Format24bppRgb;
-						break;
-					case sp_imageformat.RGBA:
-						rgb = true;
-						alphaMode = 1;
-						format = PixelFormat.Format32bppArgb;
-						break;
-					case sp_imageformat.RGBA_PRE:
-						rgb = true;
-						alphaMode = 2;
-						format = PixelFormat.Format32bppPArgb;
-						break;
-					default:
-						throw new Exception("Unknown image format");						
-				}
+				int length = lengthPtr.ToInt32();
 				
-				int bpp = Bitmap.GetPixelFormatSize(format) >> 3;
+				byte[] imageData = new byte[length];
+				Marshal.Copy(dataPtr, imageData, 0, imageData.Length);
 				
-				Bitmap bmp = new Bitmap(width, height, format);
-				
-				byte[] buf = new byte[height * stride];
-				Marshal.Copy(pixelPtr, buf, 0, buf.Length);
-				int i = 0;
-				int r, g, b, a;
-				float f;
-				for(int row = 0; row < height; row++)
-				{
-					for (int col = 0; col < width; col++)
-					{
-						i = row * stride + col * bpp;
-						
-						if (rgb)
-						{
-							r = buf[i];
-							g = buf[i+1];
-							b = buf[i+2];							
-						}
-						else
-						{
-							b = buf[i];
-							g = buf[i+1];
-							r = buf[i+2];
-						}
-						
-						if(alphaMode == 0)
-							a = 255;
-						else if(alphaMode == 1)
-							a = buf[i+3];
-						else
-						{
-							// This is not correct really, but should work "good enough"
-							// Values are stored premultiplied, inverse that.							
-							a = buf[i+3];
-							f = 255f / (float)a;
-							r = (byte)(r * f);
-							g = (byte)(g * f);
-							b = (byte)(b * f);
-						}
-						
-						// Sloooow :-(
-						bmp.SetPixel(col, row, Color.FromArgb(a, r, g, b));
-					}
-				}				
+				Bitmap bmp = (Bitmap) Bitmap.FromStream(new MemoryStream(imageData));
 				
 				if (!isSync)
 				{
@@ -775,10 +688,7 @@ namespace Spotify
 				}
 			}
 			finally
-			{
-				if (pixelPtr != IntPtr.Zero)
-					libspotify.sp_image_unlock_pixels(imagePtr);
-					
+			{	
 				libspotify.sp_image_release(imagePtr);
 			}
             
@@ -797,6 +707,12 @@ namespace Spotify
 			}			
 			
 			eventThreadNotification.Set();
+		}
+		
+		internal void PlaylistContainerLoaded()
+		{
+			EnqueueEventWorkItem(new EventWorkItem(OnPlaylistContainerLoaded,
+					new object[] {this, new SessionEventArgs() }));
 		}
 		
 		#endregion		

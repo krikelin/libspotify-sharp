@@ -39,10 +39,12 @@ namespace Spotify
 		private delegate void playlist_added_delegate(IntPtr containerPtr, IntPtr playlistPtr, int position, IntPtr userDataPtr);
 		private delegate void playlist_removed_delegate(IntPtr containerPtr, IntPtr playlistPtr, int position, IntPtr userDataPtr);
 		private delegate void playlist_moved_delegate(IntPtr containerPtr, IntPtr playlistPtr, int position, int new_position, IntPtr userDataPtr);
+		private delegate void container_loaded_delegate(IntPtr containerPtr, IntPtr userDataPtr);
 		
 		private static playlist_added_delegate playlist_added = new playlist_added_delegate(PlaylistAddedCallback);
 		private static playlist_removed_delegate playlist_removed = new playlist_removed_delegate(PlaylistRemovedCallback);
 		private static playlist_moved_delegate playlist_moved = new playlist_moved_delegate(PlaylistMovedCallback);		
+		private static container_loaded_delegate container_loaded = new container_loaded_delegate(ContainerLoadedCallback);
 		
 		private static Dictionary<IntPtr, PlaylistContainer> containers = new Dictionary<IntPtr, PlaylistContainer>();
 		private static libspotify.sp_playlistcontainer_callbacks callbacks;
@@ -55,6 +57,7 @@ namespace Spotify
 		public event PlaylistContainerEventHandler OnPlaylistAdded;
 		public event PlaylistContainerEventHandler OnPlaylistRemoved;
 		public event PlaylistContainerEventHandler OnPlaylistMoved;
+		public event PlaylistContainerEventHandler OnContainerLoaded;
 		
 		#endregion	
 		
@@ -136,6 +139,7 @@ namespace Spotify
 				callbacks.playlist_added = Marshal.GetFunctionPointerForDelegate(playlist_added);
 				callbacks.playlist_moved = Marshal.GetFunctionPointerForDelegate(playlist_moved);			
 				callbacks.playlist_removed = Marshal.GetFunctionPointerForDelegate(playlist_removed);
+				callbacks.container_loaded = Marshal.GetFunctionPointerForDelegate(container_loaded);
 				
 				int size = Marshal.SizeOf(callbacks);
 				callbacksPtr = Marshal.AllocHGlobal(size);
@@ -225,6 +229,30 @@ namespace Spotify
 				
 				pc.owningSession.EnqueueEventWorkItem(new EventWorkItem(pc.OnPlaylistMoved,
 					new object[] {pc, new PlaylistContainerEventArgs(pl, position, new_position, currentLists) }));
+			}
+			
+		}
+		
+		private static void ContainerLoadedCallback(IntPtr containerPtr, IntPtr userDataPtr)
+		{
+			PlaylistContainer pc = GetContainer(containerPtr);
+			
+			if(pc != null)
+			{
+				Playlist[] currentLists;
+				
+				lock(libspotify.Mutex)
+				{
+					currentLists = pc.CurrentLists;
+				}
+				
+				// It's more practical to have this event on Session IMHO. Let's have both.
+				
+				pc.owningSession.EnqueueEventWorkItem(new EventWorkItem(pc.OnContainerLoaded,
+					new object[] {pc, new PlaylistContainerEventArgs(null, -1, -1, currentLists) }));
+				
+				pc.owningSession.PlaylistContainerLoaded();
+				
 			}
 			
 		}

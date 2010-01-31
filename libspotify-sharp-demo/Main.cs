@@ -74,6 +74,7 @@ namespace libspotifysharpdemo
 				password = args[1];
 			}
 			
+			
 			if(string.IsNullOrEmpty(password) || string.IsNullOrEmpty(username))
 			{
 				Console.WriteLine("Usage: demo.exe username password");
@@ -125,6 +126,7 @@ namespace libspotifysharpdemo
 			s.OnMusicDelivery += HandleOnMusicDelivery;
 			s.OnEndOfTrack += HandleOnEndOfTrack;
 			s.OnImageLoaded += HandleOnImageLoaded;
+			s.OnPlaylistContainerLoaded += HandleOnPlaylistContainerLoaded;
 
 			Console.WriteLine("Logging in...");
 			s.LogIn(username, password);
@@ -139,7 +141,7 @@ namespace libspotifysharpdemo
 			// terminated. libspotify internal threads are are still active and prevents mono
 			// from exiting. Should be done with some other signal than SIGKILL.
 			System.Diagnostics.Process.GetCurrentProcess().Kill();
-		}	
+		}
 		
 		// Event callbacks
 		
@@ -154,6 +156,13 @@ namespace libspotifysharpdemo
 			// too tell them apart.
 			sender.Search("green day idiot", 0, 500, 0, 500, 0, 500, null);
 		}
+		
+		static void HandleOnPlaylistContainerLoaded(Session sender, SessionEventArgs e)
+		{
+			Console.WriteLine("PlaylistContainer loaded, {0} lists", sender.PlaylistContainer.CurrentLists.Length);
+			foreach(Playlist pl in sender.PlaylistContainer.CurrentLists)
+				Console.WriteLine(pl.ToString());
+		}	
 		
 		static void HandleOnSearchComplete(Session sender, SearchEventArgs e)
         {
