@@ -270,6 +270,7 @@ namespace Spotify
 		
 		private static void TracksAddedCallback(IntPtr playlistPtr, ref IntPtr tracksPtr, int num_tracks, int position, IntPtr userDataPtr)
 		{
+			
 			Playlist pl = GetPlaylist(playlistPtr);
 			
 			if(pl != null)
@@ -282,20 +283,14 @@ namespace Spotify
 				{
 					tracks = new Track[num_tracks];
 					indices = new int[num_tracks];
-					
-					for(int i = 0; i < num_tracks; i++)
-					{
-						IntPtr trackPtr = libspotify.sp_playlist_track(playlistPtr, i);
-						
+
+					for(int i = 0; i<num_tracks; i++){
+						IntPtr trackPtr = libspotify.sp_playlist_track(playlistPtr, position+i);
 						Track t = new Track(trackPtr);
-						int index = position + i;
-						
+						pl.tracks.Insert(position+i,t);
 						tracks[i] = t;
-						indices[i] = index;
-						
-						pl.tracks.Insert(position + i, t);
-					}
-					
+						indices[i] = position+i;
+					}				
 					currentTracks = pl.CurrentTracks;
 				}
 				
