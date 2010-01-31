@@ -217,8 +217,12 @@ namespace Spotify
 				
 				lock(libspotify.Mutex)
 				{
-					if(!pc.playlists[position].playlistPtr.Equals(playlistPtr))
-						throw new Exception("libspotify-sharp internal error, playlist position and pointer is inconsistent on move");
+				
+					// when moving a playlist "up", the indices are re-arranged so need to adjust the new_position
+					// when moving a playlist "down" all is good...
+					if(position < new_position){
+						new_position--;
+					}
 					
 					pl = pc.playlists[position];
 					pc.playlists.RemoveAt(position);
