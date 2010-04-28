@@ -452,7 +452,7 @@ namespace Spotify
 						int size = Marshal.SizeOf(arrayPtr) * array.Length;
 						arrayPtr = Marshal.AllocHGlobal(size);
 						Marshal.Copy(array, 0, arrayPtr, array.Length);
-						result = libspotify.sp_playlist_add_tracks(playlistPtr, ref arrayPtr, array.Length, position);
+						result = libspotify.sp_playlist_add_tracks(playlistPtr, ref arrayPtr, array.Length, position, owningSession.sessionPtr);
 					}
 					finally
 					{

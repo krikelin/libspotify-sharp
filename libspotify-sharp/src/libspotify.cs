@@ -207,7 +207,7 @@ namespace Spotify
 		internal static extern bool sp_playlist_has_pending_changes(IntPtr playlistPtr);
 		
 		[DllImport ("libspotify")]
-		internal static extern sp_error sp_playlist_add_tracks(IntPtr playlistPtr, ref IntPtr tracksArrayPtr, int num_tracks, int position);
+		internal static extern sp_error sp_playlist_add_tracks(IntPtr playlistPtr, ref IntPtr tracksArrayPtr, int num_tracks, int position, IntPtr sessionPtr);
 		
 		[DllImport ("libspotify")]
 		internal static extern sp_error sp_playlist_remove_tracks(IntPtr playlistPtr, int[] trackIndicies, int num_tracks);
