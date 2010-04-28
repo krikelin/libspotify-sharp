@@ -1056,6 +1056,14 @@ namespace Spotify
 				return libspotify.sp_session_player_play(sessionPtr, play);
 			}	
 		}
+
+        public void PreferredBitrate(sp_bitrate bitrate)
+        {
+            lock (libspotify.Mutex)
+            {
+                libspotify.sp_session_preferred_bitrate(sessionPtr, bitrate);
+            }
+        }
 		
 		#endregion
 	}

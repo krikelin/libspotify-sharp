@@ -106,6 +106,9 @@ namespace Spotify
 		
 		[DllImport ("libspotify")]
 		internal static extern IntPtr sp_session_playlistcontainer(IntPtr sessionPtr);
+
+        [DllImport("libspotify")]
+        internal static extern void sp_session_preferred_bitrate(IntPtr sessionPtr, sp_bitrate bitrate);
 		
 		#endregion
 	
@@ -669,8 +672,8 @@ namespace Spotify
 	
 	internal enum sp_imageformat : int
 	{
-		SP_IMAGE_FORMAT_UNKNOWN,
-		SP_IMAGE_FORMAT_JPEG
+		IMAGE_FORMAT_UNKNOWN,
+		IMAGE_FORMAT_JPEG
 	}
 	
 	public enum sp_albumtype
@@ -680,6 +683,13 @@ namespace Spotify
   		COMPILATION = 2,
   		UNKNOWN = 3
 	}
+
+    public enum sp_bitrate
+    {
+        BITRATE_160k = 0,
+        BITRATE_320k = 1
+    }
+
 
     public enum StringEncoding
     {
