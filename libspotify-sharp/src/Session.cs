@@ -938,6 +938,38 @@ namespace Spotify
 			
 			return GetSyncResponse(id, waitHandle, timeout) as Search;
 		}
+
+        public bool RadioSearch(int fromYear, int toYear, sp_radio_genre genre, object state)
+        {
+            lock (libspotify.Mutex)
+            {
+                int id = GetUserStateId();
+                states[id] = state;
+                IntPtr browsePtr = libspotify.sp_radio_search_create(sessionPtr, fromYear, toYear, genre, Marshal.GetFunctionPointerForDelegate(search_complete_cb), new IntPtr(id));
+                return browsePtr != IntPtr.Zero;
+            }
+        }
+
+
+        public Search RadioSearchSync(int fromYear, int toYear, sp_radio_genre genre, TimeSpan timeout)
+        {
+            ManualResetEvent waitHandle = new ManualResetEvent(false);
+            int id = GetInternalStateId();
+
+            lock (libspotify.Mutex)
+            {
+                states[id] = waitHandle;
+                if (libspotify.sp_radio_search_create(sessionPtr, fromYear, toYear, genre,
+                    Marshal.GetFunctionPointerForDelegate(search_complete_cb), new IntPtr(id)) == IntPtr.Zero)
+                {
+                    waitHandle.Close();
+                    states.Remove(id);
+                    return null;
+                }	
+            }
+
+            return GetSyncResponse(id, waitHandle, timeout) as Search;
+        }
 		
 		public bool LoadImage(string id, object state)
         {

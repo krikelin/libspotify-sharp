@@ -79,10 +79,23 @@ namespace Spotify
 		private Session owningSession = null;		
 		
 		#endregion
-		
-		#region Ctor		
 
-		internal Playlist(IntPtr playlistPtr, Session owningSession)
+        #region Static
+
+        public static Playlist Create(Session session, Link link)
+        {
+            IntPtr ptr = libspotify.sp_playlist_create(session.sessionPtr, link.linkPtr);
+            if (ptr != IntPtr.Zero)
+                return new Playlist(ptr, session);
+            else
+                return null;
+        }
+
+        #endregion
+
+        #region Ctor
+
+        internal Playlist(IntPtr playlistPtr, Session owningSession)
 		{
 			if(playlistPtr == IntPtr.Zero)
 				throw new ArgumentException("playlistPtr can not be zero");			
@@ -132,6 +145,7 @@ namespace Spotify
 					{
 						if(libspotify.sp_playlist_is_loaded(playlistPtr))
 						{
+                            // TODO Char encoding?
 							sp_error result = libspotify.sp_playlist_rename(playlistPtr, value);
 							if(result != sp_error.OK)
 							{

@@ -40,21 +40,24 @@ namespace Spotify
 
         #region Strings
 
-        private static StringEncoding stringEncoding = StringEncoding.Ansi;
-
-        public static void SetStringEncoding(StringEncoding encoding)
-        {
-            stringEncoding = encoding;
-        }
-
         internal static string GetString(IntPtr ptr, string defaultValue)
         {
-            if (stringEncoding == StringEncoding.Ansi)
-                return ptr == IntPtr.Zero ? defaultValue : Marshal.PtrToStringAnsi(ptr);
-            else if (stringEncoding == StringEncoding.Unicode)
-                return ptr == IntPtr.Zero ? defaultValue : Marshal.PtrToStringUni(ptr);
+            if (ptr == IntPtr.Zero)
+                return defaultValue;
 
-            return defaultValue;
+            System.Collections.Generic.List<byte> l = new System.Collections.Generic.List<byte>();            
+            byte read = 0;
+            do
+            {
+                read = Marshal.ReadByte(ptr, l.Count);                
+                l.Add(read);
+            }
+            while (read != 0);
+
+            if (l.Count > 0)
+                return System.Text.Encoding.UTF8.GetString(l.ToArray(), 0, l.Count - 1);
+            else
+                return string.Empty;
         }
 
         #endregion
@@ -217,8 +220,11 @@ namespace Spotify
 		
 		[DllImport ("libspotify")]
 		internal static extern sp_error sp_playlist_reorder_tracks(IntPtr playlistPtr, int[] trackIndicies, int num_tracks, int new_position);
+
+        [DllImport ("libspotify")]
+        internal static extern IntPtr sp_playlist_create(IntPtr sessionPtr, IntPtr linkPtr);
 		
-		// Playlist continer
+		// Playlist container
 		
 		[DllImport ("libspotify")]
 		internal static extern void sp_playlistcontainer_add_callbacks(IntPtr containerPtr, IntPtr callbacksPtr, IntPtr userDataPtr);
@@ -512,6 +518,10 @@ namespace Spotify
 		                                               IntPtr callbackPtr, IntPtr userDataPtr);
 
         [DllImport("libspotify")]
+        internal static extern IntPtr sp_radio_search_create(IntPtr sessionPtr, int from_year, int to_year, sp_radio_genre genres,
+                                                        IntPtr callbackPtr, IntPtr userDataPtr);
+
+        [DllImport("libspotify")]
         internal static extern bool sp_search_is_loaded(IntPtr searchPtr);
 
         [DllImport("libspotify")]
@@ -699,12 +709,27 @@ namespace Spotify
         BITRATE_320k = 1
     }
 
-
-    public enum StringEncoding
+    public enum sp_radio_genre
     {
-        Ansi,
-        Unicode
+        ALT_POP_ROCK = 0x1,
+        BLUES = 0x2,
+        COUNTRY = 0x4,
+        DISCO = 0x8,
+        FUNK = 0x10,
+        HARD_ROCK = 0x20,
+        HEAVY_METAL = 0x40,
+        RAP = 0x80,
+        HOUSE = 0x100,
+        JAZZ = 0x200,
+        NEW_WAVE = 0x400,
+        RNB = 0x800,
+        POP = 0x1000,
+        PUNK = 0x2000,
+        REGGAE = 0x4000,
+        POP_ROCK = 0x8000,
+        SOUL = 0x10000,
+        TECHNO = 0x20000
     }
-	
-	#endregion
+
+    #endregion
 }
