@@ -139,14 +139,17 @@ namespace Spotify
 				isAvailable = libspotify.sp_track_is_available(trackPtr);
 				
 				error = libspotify.sp_track_error(trackPtr);
-				album = new Album(libspotify.sp_track_album(trackPtr));
+                IntPtr albumPtr = libspotify.sp_track_album(trackPtr);
+                if (albumPtr != IntPtr.Zero)
+                    album = new Album(albumPtr);
+                else
+                    album = null;
 				
 				artists = new Artist[libspotify.sp_track_num_artists(trackPtr)];
 				for(int i = 0; i < artists.Length; i++)
 					artists[i] = new Artist(libspotify.sp_track_artist(trackPtr, i));
 				
-				IntPtr namePtr = libspotify.sp_track_name(trackPtr);
-				name = namePtr == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAuto(namePtr);
+                name = libspotify.GetString(libspotify.sp_track_name(trackPtr), string.Empty);
 				
 				duration = libspotify.sp_track_duration(trackPtr);
 				popularity = libspotify.sp_track_popularity(trackPtr);

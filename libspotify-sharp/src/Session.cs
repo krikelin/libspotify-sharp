@@ -67,6 +67,8 @@ namespace Spotify
 		private delegate void play_token_lost_delegate(IntPtr sessionPtr);
 		private delegate void log_message_delegate(IntPtr sessionPtr, string message);
 		private delegate void end_of_track_delegate(IntPtr sessionPtr);
+        private delegate void streaming_error_delegate(IntPtr sessionPtr, sp_error error);
+        private delegate void userinfo_updated_delegate(IntPtr sessionPtr);
 		
 		private delegate void albumbrowse_complete_cb_delegate(IntPtr albumBrowsePtr, IntPtr userDataPtr);		
 		
@@ -86,6 +88,10 @@ namespace Spotify
 		private static play_token_lost_delegate play_token_lost = new play_token_lost_delegate(PlayTokenLostCallback);
 		private static log_message_delegate log_message = new log_message_delegate(LogMessageCallback);
 		private static end_of_track_delegate end_of_track = new end_of_track_delegate(EndOfTrackCallback);
+        private static streaming_error_delegate streaming_error = new streaming_error_delegate(StreamingErrorCallback);
+        private static userinfo_updated_delegate userinfo_updated = new userinfo_updated_delegate(UserinfoUpdatedCallback);
+
+
 		
 		#endregion
 		
@@ -104,6 +110,8 @@ namespace Spotify
 		public event ImageEventHandler OnImageLoaded;
 		public event SessionEventHandler OnEndOfTrack;
 		public event SessionEventHandler OnPlaylistContainerLoaded;
+        public event SessionEventHandler OnStreamingError;
+        public event SessionEventHandler OnUserinfoUpdated;
 		
 		/* NOTE
 		 * 
@@ -262,6 +270,8 @@ namespace Spotify
 				callbacks.notify_main_thread = Marshal.GetFunctionPointerForDelegate(notify_main_thread);
 				callbacks.play_token_lost = Marshal.GetFunctionPointerForDelegate(play_token_lost);				
 				callbacks.end_of_track = Marshal.GetFunctionPointerForDelegate(end_of_track);
+                callbacks.streaming_error = Marshal.GetFunctionPointerForDelegate(streaming_error);
+                callbacks.userinfo_updated = Marshal.GetFunctionPointerForDelegate(userinfo_updated);
 			}
 		}
 					
@@ -444,6 +454,24 @@ namespace Spotify
 			
 			s.EnqueueEventWorkItem(new EventWorkItem(s.OnEndOfTrack, new object[] { s, new SessionEventArgs() }));
 		}
+
+        private static void StreamingErrorCallback(IntPtr sessionPtr, sp_error error)
+        {
+            Session s = GetSession(sessionPtr);
+            if (s == null)
+                return;
+
+            s.EnqueueEventWorkItem(new EventWorkItem(s.OnStreamingError, new object[] { s, new SessionEventArgs(error) }));
+        }
+
+        private static void UserinfoUpdatedCallback(IntPtr sessionPtr)
+        {
+            Session s = GetSession(sessionPtr);
+            if (s == null)
+                return;
+
+            s.EnqueueEventWorkItem(new EventWorkItem(s.OnUserinfoUpdated, new object[] { s, new SessionEventArgs() }));
+        }
 		
 		
 		#endregion
@@ -465,7 +493,14 @@ namespace Spotify
 				{
 					lock(libspotify.Mutex)
 					{
-						libspotify.sp_session_process_events(sessionPtr, out waitTime);					
+                        try
+                        {
+                            libspotify.sp_session_process_events(sessionPtr, out waitTime);
+                        }
+                        catch
+                        {
+                            waitTime = 1000;
+                        }
 					}
 				}
 				while(waitTime == 0);				

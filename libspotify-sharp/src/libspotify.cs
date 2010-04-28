@@ -30,17 +30,39 @@ namespace Spotify
 {
 	internal static class libspotify
 	{	
-		internal static object Mutex = new object();
+		internal static object Mutex = new object();        
 		
 		#region Constants
 	
-		public const int SPOTIFY_API_VERSION = 3;
+		public const int SPOTIFY_API_VERSION = 4;
 	
 		#endregion
-		
-		#region Error handling
-		
-		[DllImport ("libspotify")]
+
+        #region Strings
+
+        private static StringEncoding stringEncoding = StringEncoding.Ansi;
+
+        public static void SetStringEncoding(StringEncoding encoding)
+        {
+            stringEncoding = encoding;
+        }
+
+        internal static string GetString(IntPtr ptr, string defaultValue)
+        {
+            if (stringEncoding == StringEncoding.Ansi)
+                return ptr == IntPtr.Zero ? defaultValue : Marshal.PtrToStringAnsi(ptr);
+            else if (stringEncoding == StringEncoding.Unicode)
+                return ptr == IntPtr.Zero ? defaultValue : Marshal.PtrToStringUni(ptr);
+
+            return defaultValue;
+        }
+
+        #endregion
+
+
+        #region Error handling
+
+        [DllImport ("libspotify")]
 		public static extern string sp_error_message(sp_error error);
 		
 		#endregion
@@ -113,6 +135,8 @@ namespace Spotify
 			internal IntPtr play_token_lost;
 			internal IntPtr log_message;
 			internal IntPtr end_of_track;
+            internal IntPtr streaming_error;
+            internal IntPtr userinfo_updated;
 		}
 		
 		internal struct sp_audioformat
@@ -655,7 +679,13 @@ namespace Spotify
   		SINGLE = 1,
   		COMPILATION = 2,
   		UNKNOWN = 3
-	}	
+	}
+
+    public enum StringEncoding
+    {
+        Ansi,
+        Unicode
+    }
 	
 	#endregion
 }

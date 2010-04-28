@@ -131,8 +131,7 @@ namespace Spotify
 				CheckDisposed(true);
 				lock(libspotify.Mutex)
 				{
-					IntPtr namePtr = libspotify.sp_playlist_name(playlistPtr);
-					return namePtr == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAuto(namePtr);
+                    return libspotify.GetString(libspotify.sp_playlist_name(playlistPtr), string.Empty);
 				}
 			}
 			

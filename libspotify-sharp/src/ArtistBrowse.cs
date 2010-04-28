@@ -89,7 +89,7 @@ namespace Spotify
 				}
 				
 				strPtr = libspotify.sp_albumbrowse_review(artistBrowsePtr);
-				biography = Marshal.PtrToStringAuto(strPtr);
+                biography = libspotify.GetString(strPtr, string.Empty);
 				
 				libspotify.sp_artistbrowse_release(artistBrowsePtr);
 			}

@@ -108,7 +108,7 @@ namespace Spotify
 					}
 					else if(strlen < bufSize)
 					{
-						result = Marshal.PtrToStringAuto(bufferPtr);						
+                        result = libspotify.GetString(bufferPtr, string.Empty);
 						break;					
 					}
 					else

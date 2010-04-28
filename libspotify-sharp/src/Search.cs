@@ -82,10 +82,10 @@ namespace Spotify
                 }
 
                 strPtr = libspotify.sp_search_query(searchPtr);
-                query = Marshal.PtrToStringAuto(strPtr);
+                query = libspotify.GetString(strPtr, string.Empty);
 
                 strPtr = libspotify.sp_search_did_you_mean(searchPtr);
-                didYouMean = Marshal.PtrToStringAuto(strPtr);
+                didYouMean = libspotify.GetString(strPtr, string.Empty);
 
                 totalTracks = libspotify.sp_search_total_tracks(searchPtr);                
             }

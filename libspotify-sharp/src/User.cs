@@ -47,8 +47,7 @@ namespace Spotify
 				{
 					lock(libspotify.Mutex)
 					{
-						IntPtr strPtr = libspotify.sp_user_canonical_name(userPtr);						
-						return strPtr == IntPtr.Zero ? "Unknown" : Marshal.PtrToStringAuto(strPtr);
+                        return libspotify.GetString(libspotify.sp_user_canonical_name(userPtr), "Unknown");
 					}
 				}
 			}
@@ -63,9 +62,8 @@ namespace Spotify
 				else
 				{
 					lock(libspotify.Mutex)
-					{					
-						IntPtr strPtr = libspotify.sp_user_display_name(userPtr);
-						return strPtr == IntPtr.Zero ? "Unknown" : Marshal.PtrToStringAuto(strPtr);
+					{
+                        return libspotify.GetString(libspotify.sp_user_display_name(userPtr), "Unknown");
 					}
 				}
 			}

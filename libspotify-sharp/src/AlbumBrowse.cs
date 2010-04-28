@@ -61,7 +61,7 @@ namespace Spotify
 				for(int i = 0; i < copyrights.Length; i++)
 				{
 					strPtr = libspotify.sp_albumbrowse_copyright(albumBrowsePtr, i);
-					copyrights[i] = Marshal.PtrToStringAuto(strPtr);
+					copyrights[i] = libspotify.GetString(strPtr, string.Empty);
 				}
 				
 				tracks = new Track[libspotify.sp_albumbrowse_num_tracks(albumBrowsePtr)];
@@ -72,7 +72,7 @@ namespace Spotify
 				}
 				
 				strPtr = libspotify.sp_albumbrowse_review(albumBrowsePtr);
-				review = Marshal.PtrToStringAuto(strPtr);
+                review = libspotify.GetString(strPtr, string.Empty);
 				
 				libspotify.sp_albumbrowse_release(albumBrowsePtr);
 			}
