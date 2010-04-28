@@ -142,9 +142,7 @@ namespace Spotify
                 IntPtr albumPtr = libspotify.sp_track_album(trackPtr);
                 if (albumPtr != IntPtr.Zero)
                     album = new Album(albumPtr);
-                else
-                    album = null;
-				
+
 				artists = new Artist[libspotify.sp_track_num_artists(trackPtr)];
 				for(int i = 0; i < artists.Length; i++)
 					artists[i] = new Artist(libspotify.sp_track_artist(trackPtr, i));
