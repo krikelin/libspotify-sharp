@@ -97,7 +97,7 @@ namespace Spotify
 		private int popularity = 0;
 		private int disc = 0;
 		private int index = 0;
-		private string linkString = string.Empty;		
+		private string linkString = string.Empty;
 		
 		#endregion
 		
@@ -169,10 +169,23 @@ namespace Spotify
 		{
 			get
 			{
-				CheckLoaded();				
+				CheckLoaded();
 				return isLoaded;
 			}
-		}		
+		}
+
+        public bool IsStarred
+        {
+            get
+            {
+                CheckLoaded();
+                lock (libspotify.Mutex)
+                {
+                    bool result = libspotify.sp_track_is_starred(trackPtr);
+                    return result;
+                }
+            }
+        }
 		
 		public bool IsAvailable
 		{
@@ -282,13 +295,38 @@ namespace Spotify
 					return null;
 			}
 		}
+
+        public void SetStarred(Session session, bool starred)
+        {
+            CheckLoaded();
+            if (!isLoaded)
+                return;
+
+            IntPtr arrayPtr = IntPtr.Zero;
+
+            try
+            {
+                int[] array = new int[] { trackPtr.ToInt32() };
+                int size = Marshal.SizeOf(arrayPtr) * array.Length;
+                arrayPtr = Marshal.AllocHGlobal(size);
+                Marshal.Copy(array, 0, arrayPtr, array.Length);
+                libspotify.sp_track_set_starred(session.sessionPtr, arrayPtr, 1, starred);
+            }
+            finally
+            {
+                if (arrayPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(arrayPtr);
+                }
+            }
+        }
 		
 		public override string ToString ()
 		{
 			if(IsLoaded)			
 			{
-				return string.Format("[Track: Error={0}, Album.Name={1}, Artists={2}, Name={3}, Duration={4}, Popularity={5}, Disc={6}, Index={7}, LinkString={8}]",
-					Error, Album.Name, Artist.ArtistsToString(Artists), Name, Duration, Popularity, Disc, Index, LinkString);
+                return string.Format("[Track: Error={0}, Album.Name={1}, Artists={2}, Name={3}, Duration={4}, Popularity={5}, Disc={6}, Index={7}, LinkString={8} IsStarred={9}]",
+					Error, Album.Name, Artist.ArtistsToString(Artists), Name, Duration, Popularity, Disc, Index, LinkString, IsStarred);
 			}
 			else
 				return "[Track: Not loaded]";

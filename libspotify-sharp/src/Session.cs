@@ -112,6 +112,8 @@ namespace Spotify
 		public event SessionEventHandler OnPlaylistContainerLoaded;
         public event SessionEventHandler OnStreamingError;
         public event SessionEventHandler OnUserinfoUpdated;
+
+        public event SessionEventHandler OnException;
 		
 		/* NOTE
 		 * 
@@ -530,7 +532,8 @@ namespace Spotify
 					}
 					catch(Exception ex)
 					{
-						Console.Error.WriteLine(ex.ToString());
+                        if (OnException != null)
+                            OnException(this, new SessionEventArgs(ex.ToString()));
 					}
 				}
 
@@ -1062,6 +1065,14 @@ namespace Spotify
             lock (libspotify.Mutex)
             {
                 libspotify.sp_session_preferred_bitrate(sessionPtr, bitrate);
+            }
+        }
+
+        public Playlist StarredPlaylistCreate()
+        {
+            lock (libspotify.Mutex)
+            {
+                return new Playlist(libspotify.sp_session_starred_create(sessionPtr), this);
             }
         }
 		

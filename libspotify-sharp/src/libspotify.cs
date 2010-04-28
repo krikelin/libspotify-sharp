@@ -109,6 +109,9 @@ namespace Spotify
 
         [DllImport("libspotify")]
         internal static extern void sp_session_preferred_bitrate(IntPtr sessionPtr, sp_bitrate bitrate);
+
+        [DllImport("libspotify")]
+        internal static extern IntPtr sp_session_starred_create(IntPtr sessionPtr);
 		
 		#endregion
 	
@@ -207,7 +210,7 @@ namespace Spotify
 		internal static extern bool sp_playlist_has_pending_changes(IntPtr playlistPtr);
 		
 		[DllImport ("libspotify")]
-		internal static extern sp_error sp_playlist_add_tracks(IntPtr playlistPtr, ref IntPtr tracksArrayPtr, int num_tracks, int position, IntPtr sessionPtr);
+		internal static extern sp_error sp_playlist_add_tracks(IntPtr playlistPtr, IntPtr tracksArrayPtr, int num_tracks, int position, IntPtr sessionPtr);
 		
 		[DllImport ("libspotify")]
 		internal static extern sp_error sp_playlist_remove_tracks(IntPtr playlistPtr, int[] trackIndicies, int num_tracks);
@@ -309,6 +312,12 @@ namespace Spotify
 		
 		[DllImport ("libspotify")]
 		internal static extern void sp_track_release(IntPtr trackPtr);
+
+        [DllImport("libspotify")]
+        internal static extern bool sp_track_is_starred(IntPtr trackPtr);
+
+        [DllImport("libspotify")]
+        internal static extern void sp_track_set_starred(IntPtr sessionPtr, IntPtr tracksArrayPtr, int num_tracks, bool star);
 		
 		#endregion
 		

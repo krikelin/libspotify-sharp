@@ -76,8 +76,7 @@ namespace Spotify
 		#region Private declarations
 		
 		internal IntPtr playlistPtr = IntPtr.Zero;	
-		private Session owningSession = null;
-		private List<Track> tracks = new List<Track>();		
+		private Session owningSession = null;		
 		
 		#endregion
 		
@@ -92,21 +91,10 @@ namespace Spotify
 			{
 				this.playlistPtr = playlistPtr;
 				this.owningSession = owningSession;
-				
-				if(playlists.ContainsKey(playlistPtr))
-					throw new Exception("libspotify-sharp internal error, creating playlist for the second time");				
 
 				libspotify.sp_playlist_add_callbacks(playlistPtr, callbacksPtr, IntPtr.Zero);
-				
-				playlists.Add(playlistPtr, this);								
-				
-				
-				for(int i = 0; i < TrackCount; i++)
-				{
-					IntPtr trackPtr = libspotify.sp_playlist_track(playlistPtr, i);
-					Track t = new Track(trackPtr);
-					tracks.Add(t);
-				}
+
+                playlists[playlistPtr] = this;
 			}
 		}
 		
@@ -207,11 +195,20 @@ namespace Spotify
 		{
 			get
 			{
-				lock(libspotify.Mutex)
-				{
-					CheckDisposed(true);
-					return tracks.ToArray();
-				}
+                CheckDisposed(true);
+                List<Track> tracks = new List<Track>();
+                lock (libspotify.Mutex)
+                {
+                    tracks.Clear();
+                    for (int i = 0; i < TrackCount; i++)
+                    {
+                        IntPtr trackPtr = libspotify.sp_playlist_track(playlistPtr, i);
+                        Track t = new Track(trackPtr);
+                        tracks.Add(t);
+                    }
+                }
+
+                return tracks.ToArray();
 			}
 		}
 		
@@ -280,17 +277,17 @@ namespace Spotify
 				
 				lock(libspotify.Mutex)
 				{
+                    currentTracks = pl.CurrentTracks;
 					tracks = new Track[num_tracks];
 					indices = new int[num_tracks];
 
-					for(int i = 0; i<num_tracks; i++){
-						IntPtr trackPtr = libspotify.sp_playlist_track(playlistPtr, position+i);
-						Track t = new Track(trackPtr);
-						pl.tracks.Insert(position+i,t);
-						tracks[i] = t;
-						indices[i] = position+i;
-					}				
-					currentTracks = pl.CurrentTracks;
+                    for (int i = 0; i < num_tracks; i++)
+                    {
+                        IntPtr trackPtr = libspotify.sp_playlist_track(playlistPtr, position + i);
+                        Track t = new Track(trackPtr);
+                        tracks[i] = t;
+                        indices[i] = position + i;
+                    }
 				}
 				
 				pl.owningSession.EnqueueEventWorkItem(new EventWorkItem(pl.OnTracksAdded,
@@ -304,33 +301,23 @@ namespace Spotify
 			
 			if(pl != null)
 			{
-				Track[] tracks;
 				Track[] currentTracks;
 				int[] indices;
 				
 				lock(libspotify.Mutex)
 				{
-					tracks = new Track[num_tracks];
+                    currentTracks = pl.CurrentTracks;
 					indices = new int[num_tracks];
 					
 					for(int i = 0; i < num_tracks; i++)
 					{
 						int index = Marshal.ReadInt32(trackIndicesPtr, i);
 						indices[i] = index;
-						
-						Track t = pl.tracks[index];
-						
-						tracks[i] = t;
 					}
-					
-					foreach(Track t in tracks)					
-						pl.tracks.Remove(t);
-					
-					currentTracks = pl.CurrentTracks;					
 				}
 				
 				pl.owningSession.EnqueueEventWorkItem(new EventWorkItem(pl.OnTracksRemoved,
-					new object[] {pl, new TracksEventArgs(tracks, indices, -1, -1, currentTracks) }));
+					new object[] {pl, new TracksEventArgs(null, indices, -1, -1, currentTracks) }));
 			}
 		}
 		
@@ -346,6 +333,8 @@ namespace Spotify
 				
 				lock(libspotify.Mutex)
 				{
+                    currentTracks = pl.CurrentTracks;
+
 					tracks = new Track[num_tracks];
 					indices = new int[num_tracks];
 					
@@ -353,19 +342,8 @@ namespace Spotify
 					{
 						int index = Marshal.ReadInt32(trackIndicesPtr, i);
 						indices[i] = index;
-						
-						Track t = pl.tracks[index];						
-						tracks[i] = t;
-					}
-					
-					foreach(Track t in tracks)					
-						pl.tracks.Remove(t);						
-					
-					
-					for(int i = 0; i > num_tracks; i++)					
-						pl.tracks.Insert(new_position + i, tracks[i]);						
-					
-					currentTracks = pl.CurrentTracks;
+                        tracks[i] = currentTracks[index];
+					}				
 				}
 				
 				pl.owningSession.EnqueueEventWorkItem(new EventWorkItem(pl.OnTracksMoved,
@@ -419,8 +397,13 @@ namespace Spotify
 		
 		#endregion
 		
-		#region Private methods			
-		
+		#region Private methods
+
+        private void LoadTracks()
+        {
+            
+        }
+
 		#endregion
 		
 		#region Public methods		
@@ -452,7 +435,7 @@ namespace Spotify
 						int size = Marshal.SizeOf(arrayPtr) * array.Length;
 						arrayPtr = Marshal.AllocHGlobal(size);
 						Marshal.Copy(array, 0, arrayPtr, array.Length);
-						result = libspotify.sp_playlist_add_tracks(playlistPtr, ref arrayPtr, array.Length, position, owningSession.sessionPtr);
+						result = libspotify.sp_playlist_add_tracks(playlistPtr, arrayPtr, array.Length, position, owningSession.sessionPtr);
 					}
 					finally
 					{
@@ -560,9 +543,7 @@ namespace Spotify
 						libspotify.sp_playlist_remove_callbacks(playlistPtr, callbacksPtr, IntPtr.Zero);
 					}
 					
-					playlistPtr = IntPtr.Zero;				
-					
-					tracks.Clear();
+					playlistPtr = IntPtr.Zero;
 				}
 			}
 			catch
