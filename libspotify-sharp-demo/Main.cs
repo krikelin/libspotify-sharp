@@ -51,6 +51,7 @@ using System;
 using System.Threading;
 
 using Spotify;
+using System.IO;
 
 namespace libspotifysharpdemo
 {
@@ -59,11 +60,11 @@ namespace libspotifysharpdemo
 		private static AutoResetEvent playbackDone = new AutoResetEvent(false);
 		private static AutoResetEvent loggedOut = new AutoResetEvent(false);
 		private static Track currentTrack = null;
-		private static AlsaPlayer player = null;
+		private static Player player = null;
 		
 		public static void Main(string[] args)
 		{
-			// If running in MonoDevelop, set these in code directly
+			// If running in MonoDevelop / Visual Studio, set these in code directly
 			// and start w.o. parameters.
 			string username = string.Empty;
 			string password = string.Empty;
@@ -113,8 +114,27 @@ namespace libspotifysharpdemo
 			#endregion
 			
 			AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
-			
-			Session s = Session.CreateInstance(key, "/tmp/libspotify", "/tmp/libspotify", "libspotify-sharp-test");
+
+            string tmpPath = string.Empty;
+
+            if (IsWindows())
+            {
+                tmpPath = "c:\\temp\\libspotify";
+            }
+            else
+                tmpPath = "/tmp/libspotify";
+
+            try
+            {
+                if (!Directory.Exists(tmpPath))
+                    Directory.CreateDirectory(tmpPath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+
+            Session s = Session.CreateInstance(key, tmpPath, tmpPath, "libspotify-sharp-test");
 			
 			s.OnConnectionError += HandleOnConnectionError;
 			s.OnLoggedOut += HandleOnLoggedOut;
@@ -130,17 +150,24 @@ namespace libspotifysharpdemo
 
 			Console.WriteLine("Logging in...");
 			s.LogIn(username, password);
+            
+            // We want quality
+            s.PreferredBitrate(sp_bitrate.BITRATE_320k);
 			
-			playbackDone.WaitOne();
+            playbackDone.WaitOne();
 			Console.WriteLine("Logging out..");
 			s.LogOut();
 			loggedOut.WaitOne(5000, false);
 			Console.WriteLine("Logged out");
-			// FIXME
-			// This is really ugly. However, mono doesn't exit even if all our threads are
-			// terminated. libspotify internal threads are are still active and prevents mono
-			// from exiting. Should be done with some other signal than SIGKILL.
-			System.Diagnostics.Process.GetCurrentProcess().Kill();
+
+            if (!IsWindows())
+            {
+                // FIXME
+                // This is really ugly. However, mono doesn't exit even if all our threads are
+                // terminated. libspotify internal threads are are still active and prevents mono
+                // from exiting. Should be done with some other signal than SIGKILL.
+                System.Diagnostics.Process.GetCurrentProcess().Kill();
+            }
 		}
 		
 		// Event callbacks
@@ -160,8 +187,8 @@ namespace libspotifysharpdemo
 		static void HandleOnPlaylistContainerLoaded(Session sender, SessionEventArgs e)
 		{
 			Console.WriteLine("PlaylistContainer loaded, {0} lists", sender.PlaylistContainer.CurrentLists.Length);
-			foreach(Playlist pl in sender.PlaylistContainer.CurrentLists)
-				Console.WriteLine(pl.ToString());
+
+            // Here you attach event handlers to PlaylistContainer and all the current lists in it
 		}	
 		
 		static void HandleOnSearchComplete(Session sender, SearchEventArgs e)
@@ -193,12 +220,21 @@ namespace libspotifysharpdemo
 			{
 				if(player == null)
 				{
-					player = new AlsaPlayer(e.Rate / 2); // Buffer 500ms of audio
-					Console.WriteLine("Player created with buffer size {0} frames", e.Rate / 2);
+                    if (IsWindows())
+                    {
+                        // Use BASS on Windows.                        
+                        player = new BASSPlayer();
+                        Console.WriteLine("BASSPlayer created");
+                    }
+                    else
+                    {
+                        player = new AlsaPlayer(e.Rate / 2); // Buffer 500ms of audio
+                        Console.WriteLine("AlsaPlayer created with buffer size {0} frames", e.Rate / 2);
+                    }
 				}
 				
 				// Don't forget to set how many frames we consumed
-				e.ConsumedFrames = player.EnqueueSamples(new AudioData(e.Channels, e.Rate, e.Samples, e.Frames));
+				e.ConsumedFrames = player.EnqueueSamples(e.Channels, e.Rate, e.Samples, e.Frames);
 			}
 			else
 			{
@@ -266,5 +302,10 @@ namespace libspotifysharpdemo
 		{
 			Console.WriteLine(e.ExceptionObject.ToString());
 		}
+
+        static bool IsWindows()
+        {
+            return Environment.OSVersion.ToString().ToLower().Contains("windows");
+        }
 	}
 }

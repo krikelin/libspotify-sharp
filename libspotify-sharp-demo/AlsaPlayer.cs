@@ -30,7 +30,7 @@ using System.Threading;
 
 namespace libspotifysharpdemo
 {
-	public class AlsaPlayer
+	public class AlsaPlayer : Player
 	{
 		private bool run = false;
 		private AutoResetEvent waitHandle = new AutoResetEvent(false);		
@@ -55,7 +55,7 @@ namespace libspotifysharpdemo
 		}
 		
 		
-		public void Stop()
+		public override void Stop()
 		{
 			lock(buffer)
 			{
@@ -63,21 +63,21 @@ namespace libspotifysharpdemo
 				buffer.Clear();
 				waitHandle.Set();
 			}
-		}         
-		
-		public int EnqueueSamples(AudioData data)
+		}
+
+        public override int EnqueueSamples(int channels, int rate, byte[] samples, int frames) 
 		{
 			int consumedFrames = 0;
-			
-			if(data != null && data.Samples != null && data.Samples.Length > 0 && data.Frames > 0)
+
+            if (samples != null && samples.Length > 0 && frames > 0)
 			{		
 				lock(buffer)
 				{			
 					if(run && (bufferedFrames <=  maxBufferedFrames || buffer.Count == 0))
 					{
-						consumedFrames = data.Frames;
+                        consumedFrames = frames;
 						bufferedFrames += consumedFrames;
-						buffer.Enqueue(data);
+						buffer.Enqueue(new AudioData(channels, rate, samples, frames));
 						waitHandle.Set();					
 					}
 				}
