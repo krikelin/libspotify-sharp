@@ -1,5 +1,5 @@
 
-EXTRA_DIST =  rules.make configure Makefile.include
+EXTRA_DIST =  rules.make configure Makefile.include libspotify-sharp-demo/Bass.Net.dll
 
 all: all-recursive
 

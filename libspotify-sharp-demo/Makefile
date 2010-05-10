@@ -18,11 +18,14 @@ PROJECT_REFERENCES =  \
 	../libspotify-sharp/bin/Debug/libspotify-sharp.dll
 BUILD_DIR = bin/Debug
 
+BASS_DLL_SOURCE=bass.dll
 LIBSPOTIFY_SHARP_DLL_SOURCE=../libspotify-sharp/bin/Debug/libspotify-sharp.dll
-LIBSPOTIFY_SHARP_DLL_MDB_SOURCE=../libspotify-sharp/bin/Debug/libspotify-sharp.dll.mdb
-LIBSPOTIFY_SHARP_DLL_MDB=$(BUILD_DIR)/libspotify-sharp.dll.mdb
+BASS_NET_DLL_SOURCE=Bass.Net.dll
+LIBSPOTIFY_DLL_SOURCE=libspotify.dll
 DEMO_EXE_MDB_SOURCE=bin/Debug/demo.exe.mdb
 DEMO_EXE_MDB=$(BUILD_DIR)/demo.exe.mdb
+LIBSPOTIFY_SHARP_DLL_MDB_SOURCE=../libspotify-sharp/bin/Debug/libspotify-sharp.dll.mdb
+LIBSPOTIFY_SHARP_DLL_MDB=$(BUILD_DIR)/libspotify-sharp.dll.mdb
 
 endif
 
@@ -36,9 +39,12 @@ PROJECT_REFERENCES =  \
 	../libspotify-sharp/bin/Release/libspotify-sharp.dll
 BUILD_DIR = bin/Release
 
+BASS_DLL_SOURCE=bass.dll
 LIBSPOTIFY_SHARP_DLL_SOURCE=../libspotify-sharp/bin/Release/libspotify-sharp.dll
-LIBSPOTIFY_SHARP_DLL_MDB=
+BASS_NET_DLL_SOURCE=Bass.Net.dll
+LIBSPOTIFY_DLL_SOURCE=libspotify.dll
 DEMO_EXE_MDB=
+LIBSPOTIFY_SHARP_DLL_MDB=
 
 endif
 
@@ -46,16 +52,24 @@ AL=al2
 SATELLITE_ASSEMBLY_NAME=$(notdir $(basename $(ASSEMBLY))).resources.dll
 
 PROGRAMFILES = \
+	$(BASS_DLL) \
 	$(LIBSPOTIFY_SHARP_DLL) \
-	$(LIBSPOTIFY_SHARP_DLL_MDB) \
-	$(DEMO_EXE_MDB)  
+	$(BASS_NET_DLL) \
+	$(LIBSPOTIFY_DLL) \
+	$(DEMO_EXE_MDB) \
+	$(LIBSPOTIFY_SHARP_DLL_MDB)  
 
 
 RESGEN=resgen2
 
+BASS_DLL = $(BUILD_DIR)/bass.dll
 LIBSPOTIFY_SHARP_DLL = $(BUILD_DIR)/libspotify-sharp.dll
+BASS_NET_DLL = $(BUILD_DIR)/Bass.Net.dll
+LIBSPOTIFY_DLL = $(BUILD_DIR)/libspotify.dll
 
 FILES = \
+	BASSPlayer.cs \
+	Player.cs \
 	Main.cs \
 	AssemblyInfo.cs \
 	AlsaPlayer.cs \
@@ -71,7 +85,8 @@ REFERENCES =  \
 	System \
 	System.Drawing
 
-DLL_REFERENCES = 
+DLL_REFERENCES =  \
+	Bass.Net.dll
 
 CLEANFILES = $(PROGRAMFILES) 
 
@@ -83,7 +98,10 @@ include $(top_srcdir)/Makefile.include
 
 
 
+$(eval $(call emit-deploy-target,BASS_DLL))
 $(eval $(call emit-deploy-target,LIBSPOTIFY_SHARP_DLL))
+$(eval $(call emit-deploy-target,BASS_NET_DLL))
+$(eval $(call emit-deploy-target,LIBSPOTIFY_DLL))
 $(eval $(call emit-deploy-target,LIBSPOTIFY_SHARP_DLL_MDB))
 
 
@@ -106,9 +124,12 @@ install-local: $(ASSEMBLY) $(ASSEMBLY_MDB)
 	mkdir -p '$(DESTDIR)$(libdir)/$(PACKAGE)'
 	$(call cp,$(ASSEMBLY),$(DESTDIR)$(libdir)/$(PACKAGE))
 	$(call cp,$(ASSEMBLY_MDB),$(DESTDIR)$(libdir)/$(PACKAGE))
+	$(call cp,$(BASS_DLL),$(DESTDIR)$(libdir)/$(PACKAGE))
 	$(call cp,$(LIBSPOTIFY_SHARP_DLL),$(DESTDIR)$(libdir)/$(PACKAGE))
-	$(call cp,$(LIBSPOTIFY_SHARP_DLL_MDB),$(DESTDIR)$(libdir)/$(PACKAGE))
+	$(call cp,$(BASS_NET_DLL),$(DESTDIR)$(libdir)/$(PACKAGE))
+	$(call cp,$(LIBSPOTIFY_DLL),$(DESTDIR)$(libdir)/$(PACKAGE))
 	$(call cp,$(DEMO_EXE_MDB),$(DESTDIR)$(libdir)/$(PACKAGE))
+	$(call cp,$(LIBSPOTIFY_SHARP_DLL_MDB),$(DESTDIR)$(libdir)/$(PACKAGE))
 	make post-install-local-hook prefix=$(prefix)
 
 uninstall-local: $(ASSEMBLY) $(ASSEMBLY_MDB)
@@ -116,9 +137,12 @@ uninstall-local: $(ASSEMBLY) $(ASSEMBLY_MDB)
 	make uninstall-satellite-assemblies prefix=$(prefix)
 	$(call rm,$(ASSEMBLY),$(DESTDIR)$(libdir)/$(PACKAGE))
 	$(call rm,$(ASSEMBLY_MDB),$(DESTDIR)$(libdir)/$(PACKAGE))
+	$(call rm,$(BASS_DLL),$(DESTDIR)$(libdir)/$(PACKAGE))
 	$(call rm,$(LIBSPOTIFY_SHARP_DLL),$(DESTDIR)$(libdir)/$(PACKAGE))
-	$(call rm,$(LIBSPOTIFY_SHARP_DLL_MDB),$(DESTDIR)$(libdir)/$(PACKAGE))
+	$(call rm,$(BASS_NET_DLL),$(DESTDIR)$(libdir)/$(PACKAGE))
+	$(call rm,$(LIBSPOTIFY_DLL),$(DESTDIR)$(libdir)/$(PACKAGE))
 	$(call rm,$(DEMO_EXE_MDB),$(DESTDIR)$(libdir)/$(PACKAGE))
+	$(call rm,$(LIBSPOTIFY_SHARP_DLL_MDB),$(DESTDIR)$(libdir)/$(PACKAGE))
 	make post-uninstall-local-hook prefix=$(prefix)
 
 install: install-local

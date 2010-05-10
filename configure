@@ -3,7 +3,7 @@ VERSION=0.1
 PACKAGE=libspotify-sharp
 prefix=/usr/local
 config=DEBUG
-configurations=" DEBUG RELEASE"
+configurations=" RELEASE DEBUG"
 common_packages=""
 
 
