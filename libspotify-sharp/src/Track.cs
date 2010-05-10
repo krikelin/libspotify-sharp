@@ -326,7 +326,7 @@ namespace Spotify
 			if(IsLoaded)			
 			{
                 return string.Format("[Track: Error={0}, Album.Name={1}, Artists={2}, Name={3}, Duration={4}, Popularity={5}, Disc={6}, Index={7}, LinkString={8} IsStarred={9}]",
-					Error, Album.Name, Artist.ArtistsToString(Artists), Name, Duration, Popularity, Disc, Index, LinkString, IsStarred);
+					Error, Album == null ? "null" : Album.Name, Artist.ArtistsToString(Artists), Name, Duration, Popularity, Disc, Index, LinkString, IsStarred);
 			}
 			else
 				return "[Track: Not loaded]";
