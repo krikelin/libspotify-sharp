@@ -216,7 +216,7 @@ namespace Spotify
 			
 			try
 			{
-				config.application_key = Marshal.AllocCoTaskMem(applicationKey.Length);
+				config.application_key = Marshal.AllocHGlobal(applicationKey.Length);
 				Marshal.Copy(applicationKey, 0, config.application_key, applicationKey.Length);
 				
 				lock(libspotify.Mutex)
@@ -248,7 +248,7 @@ namespace Spotify
 			{
 				if(config.application_key != IntPtr.Zero)
 				{
-					Marshal.FreeCoTaskMem(config.application_key);
+                    Marshal.FreeHGlobal(config.application_key);
 				}
 			}
 		}
