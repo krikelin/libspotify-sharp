@@ -198,7 +198,7 @@ namespace Spotify
 		#endregion
 		
 		#region Ctor
-		
+        public static Session CurrentSession;
 		private Session(byte[] applicationKey, string cacheLocation, string settingsLocation, string userAgent)
 		{
 			libspotify.sp_session_config config = new libspotify.sp_session_config();
@@ -223,7 +223,7 @@ namespace Spotify
 					config.application_key_size = applicationKey.Length;
 				
 				sessionPtr = IntPtr.Zero;
-				sp_error res = libspotify.sp_session_init(ref config, out sessionPtr);
+				sp_error res = libspotify.sp_session_create(ref config, out sessionPtr);
 				
 				if(res != sp_error.OK)
 				{
@@ -297,10 +297,11 @@ namespace Spotify
 		private static Session GetSession(IntPtr sessionPtr)
 		{
 			Session s;
-			if(sessions.TryGetValue(sessionPtr, out s))
-				return s;
-			else
-				return null;
+            if (sessions.TryGetValue(sessionPtr, out s))
+                return s;
+            else
+                sessions.Add(sessionPtr, s);
+            return s;
 		}
 		
 		#region Callbacks
@@ -410,6 +411,8 @@ namespace Spotify
 		
 		private static void NotifyMainThreadCallback(IntPtr sessionPtr)
 		{
+
+            sessions.Add(sessionPtr, CurrentSession);
 			Session s = GetSession(sessionPtr);
 			if (s == null)
 				return;

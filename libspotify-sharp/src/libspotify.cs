@@ -34,7 +34,7 @@ namespace Spotify
 		
 		#region Constants
 	
-		public const int SPOTIFY_API_VERSION = 4;
+		public const int SPOTIFY_API_VERSION = 12;
 	
 		#endregion
 
@@ -75,7 +75,7 @@ namespace Spotify
 		#region Methods
 		
 		[DllImport ("libspotify")]
-		internal static extern sp_error sp_session_init(ref sp_session_config config, out IntPtr sessionPtr);
+		internal static extern sp_error sp_session_create(ref sp_session_config config, out IntPtr sessionPtr);
 		
 		[DllImport ("libspotify")]
 		internal static extern sp_error sp_session_login(IntPtr sessionPtr, string username, string password);
@@ -128,8 +128,18 @@ namespace Spotify
 			internal IntPtr application_key;
 			internal int application_key_size;
 			internal string user_agent;
+
 			internal IntPtr callbacks;
 			internal IntPtr userdata;
+            internal bool compress_playlists;
+            internal bool dont_save_metadata_for_playlists;
+            internal bool initially_unload_playlists;
+            internal string device_id;
+            internal string proxy;
+            internal string proxy_username;
+            internal string proxy_password;
+            internal string ca_certs_fileaname;
+            internal string tracefile;
 		}		
 		
 		internal struct sp_session_callbacks
