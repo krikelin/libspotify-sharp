@@ -78,7 +78,7 @@ namespace Spotify
 		internal static extern sp_error sp_session_create(ref sp_session_config config, out IntPtr sessionPtr);
 		
 		[DllImport ("libspotify")]
-		internal static extern sp_error sp_session_login(IntPtr sessionPtr, string username, string password);
+		internal static extern sp_error sp_session_login(IntPtr sessionPtr, string username, string password, bool remember_me, string blob);
 		
 		[DllImport ("libspotify")]
 		internal static extern IntPtr sp_session_user(IntPtr sessionPtr);
@@ -156,8 +156,30 @@ namespace Spotify
 			internal IntPtr end_of_track;
             internal IntPtr streaming_error;
             internal IntPtr userinfo_updated;
+            internal IntPtr start_playback;
+            internal IntPtr stop_playback;
+            internal IntPtr get_audio_buffer_stats;
+            internal IntPtr offline_status_updated;
+            internal IntPtr offline_error;
+            internal IntPtr credentials_blob_updated;
+            internal IntPtr connectionstate_updated;
+            internal IntPtr scrobble_error;
+            internal IntPtr private_session_mode_changed;   
 		}
-		
+        internal struct sp_offline_sync_status
+        {
+            int queued_tracks;
+            int done_tracks;
+            int copied_tracks;
+            int willnotcopy_tracks;
+            int error_tracks;
+            int syncing;
+        }
+        internal struct sp_audiobuffer_stats
+        {
+            internal int samples;
+            internal int stutter;
+        }
 		internal struct sp_audioformat
 		{
 			internal int sample_type;
@@ -675,13 +697,23 @@ namespace Spotify
 		OTHER_TRANSIENT = 16,
 		IS_LOADING = 17
 	}
-	
-	public enum sp_connectionstate
+    public enum sp_connection_type
+    {
+        SP_CONNECTION_TYPE_UNKNOWN = 1,
+        SP_CONNECTION_TYPE_NONE = 2,
+        SP_CONNECTION_TYPE_MOBILE_ROAMING = 3,
+        SP_CONNECTION_TYPE_WIFI = 4,
+        SP_CONNECTION_TYPE_WIRED = 5
+    }
+
+    public enum sp_connectionstate
 	{
 		LOGGED_OUT = 0,
 		LOGGED_IN = 1,
 		DISCONNECTED = 2,
-		UNDEFINED = 3
+        
+		UNDEFINED = 3,
+        OFFLINE = 4
 	}
 	
 	public enum sp_sampletype
@@ -698,7 +730,19 @@ namespace Spotify
   		SEARCH = 4,
   		PLAYLIST = 5
 	}
-	
+    internal enum sp_imagesize
+    {
+        SP_IMAGE_SIZE_NORMAL = 0,
+        SP_IMAGE_SIZE_SMALL = 1,
+        SP_IMAGE_SIZE_LARGE = 2
+    }
+    internal enum sp_playlist_offline_status
+    {
+        SP_PLAYLIST_OFFLINE_STATUS_NO = 0,
+        SP_PLAYLIST_OFFLINE_STATUS_YES = 1,
+        SP_PLAYLIST_OFFLINE_STATUS_DOWNLOADING = 2,
+        SP_PLAYLIST_OFFLINE_STATUS_WAITING = 3
+    }
 	internal enum sp_imageformat : int
 	{
 		IMAGE_FORMAT_UNKNOWN,

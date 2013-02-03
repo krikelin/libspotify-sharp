@@ -300,8 +300,7 @@ namespace Spotify
             if (sessions.TryGetValue(sessionPtr, out s))
                 return s;
             else
-                sessions.Add(sessionPtr, s);
-            return s;
+                return null;
 		}
 		
 		#region Callbacks
@@ -412,7 +411,6 @@ namespace Spotify
 		private static void NotifyMainThreadCallback(IntPtr sessionPtr)
 		{
 
-            sessions.Add(sessionPtr, CurrentSession);
 			Session s = GetSession(sessionPtr);
 			if (s == null)
 				return;
@@ -760,11 +758,11 @@ namespace Spotify
 		
 		#region Public methods
 		
-		public void LogIn(string username, string password)
+		public void LogIn(string username, string password, bool remember_me, string blob)
 		{
 			lock(libspotify.Mutex)
 			{
-				sp_error res = libspotify.sp_session_login(sessionPtr, username, password);	
+				sp_error res = libspotify.sp_session_login(sessionPtr, username, password, remember_me, blob);	
 				
 				if(res != sp_error.OK)
 					throw new SpotifyException(res);			
@@ -779,7 +777,7 @@ namespace Spotify
 					return sp_error.IS_LOADING;
 				else
 				{
-					sp_error res = libspotify.sp_session_login(sessionPtr, username, password);	
+					sp_error res = libspotify.sp_session_login(sessionPtr, username, password, false, "");	
 					if(res != sp_error.OK)
 						return res;
 					else
